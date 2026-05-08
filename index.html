@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RiverWatch | Live River Conditions for Fishermen</title>
+  <meta name="description" content="Real-time river data — gage height, flow rate, water temperature and fishing conditions within 100 miles of your location.">
+  <link rel="stylesheet" href="/leaflet/leaflet.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <span class="header-logo">🎣</span>
+      <div class="header-title-block">
+        <h1>RiverWatch</h1>
+        <p>Live river conditions for fishermen</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <span id="station-count" class="station-count-badge"></span>
+      <div class="zip-search">
+        <input type="text" id="zip-input" placeholder="Enter ZIP code" maxlength="5" inputmode="numeric" pattern="[0-9]*" onkeydown="if(event.key==='Enter') searchByZip()">
+        <button id="zip-btn" onclick="searchByZip()">Go</button>
+      </div>
+      <button id="locate-btn" onclick="locateUser()">📍 My Location</button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Nearby Stations</h2>
+      <button class="sidebar-toggle" onclick="toggleSidebar()" title="Close">✕</button>
+    </div>
+    <div id="status-text" class="status-text">Locating you…</div>
+    <div id="station-list" class="station-list"></div>
+    <div class="sidebar-footer">
+      <span>Data: <a href="https://waterservices.usgs.gov" target="_blank" rel="noopener">USGS National Water Information System</a></span>
+    </div>
+  </aside>
+
+  <!-- Open sidebar button (visible when closed) -->
+  <button class="sidebar-open-btn" id="sidebar-open-btn" onclick="toggleSidebar()">☰ Stations</button>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+  <!-- Detail panel (slides up on station click) -->
+  <div class="detail-panel" id="detail-panel">
+    <button class="detail-close" onclick="closeDetail()" title="Close">✕</button>
+    <div id="detail-content"></div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend" id="legend">
+    <div class="legend-title">Fishing Conditions</div>
+    <div class="legend-item"><span class="legend-dot good"></span> Good</div>
+    <div class="legend-item"><span class="legend-dot fair"></span> Fair</div>
+    <div class="legend-item"><span class="legend-dot poor"></span> High Water</div>
+    <div class="legend-item"><span class="legend-dot unknown"></span> No Data</div>
+    <div class="legend-item"><span style="font-size:12px;line-height:1">🌊</span> Tide Station</div>
+  </div>
+
+  <script src="/leaflet/leaflet.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
