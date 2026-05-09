@@ -7,9 +7,9 @@ const CFG = {
   radiusMiles:     100,
   radiusMeters:    160934,
   tideThresholdMi: 100,       // Show tides if NOAA station is within this many miles
-  usgsIvUrl:      'https://waterservices.usgs.gov/nwis/iv/',
-  noaaStationsUrl: 'https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json?type=tidepredictions&units=english',
-  noaaTidesUrl:   'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter',
+  usgsIvUrl:      '/proxy/usgs/iv/',
+  noaaStationsUrl: '/proxy/noaa/mdapi/prod/webapi/stations.json?type=tidepredictions&units=english',
+  noaaTidesUrl:   '/proxy/noaa/api/prod/datagetter',
   // 00060=discharge(CFS), 00065=gage height(ft), 00010=water temp(°C), 63680=turbidity(FNU)
   paramCodes:     '00060,00065,00010,63680'
 };
