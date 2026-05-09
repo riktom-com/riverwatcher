@@ -21,6 +21,16 @@
     </div>
     <div class="header-right">
       <span id="station-count" class="station-count-badge"></span>
+      <div class="radius-select">
+        <label for="radius-input">Radius</label>
+        <select id="radius-input" onchange="onRadiusChange()">
+          <option value="10">10 mi</option>
+          <option value="25" selected>25 mi</option>
+          <option value="50">50 mi</option>
+          <option value="100">100 mi</option>
+          <option value="150">150 mi</option>
+        </select>
+      </div>
       <div class="zip-search">
         <input type="text" id="zip-input" placeholder="Enter ZIP code" maxlength="5" inputmode="numeric" pattern="[0-9]*" onkeydown="if(event.key==='Enter') searchByZip()">
         <button id="zip-btn" onclick="searchByZip()">Go</button>
@@ -39,6 +49,7 @@
     <div id="station-list" class="station-list"></div>
     <div class="sidebar-footer">
       <span>Data: <a href="https://waterservices.usgs.gov" target="_blank" rel="noopener">USGS National Water Information System</a></span>
+      <p class="load-note">&#9203; River data loading times vary depending on your selected radius and USGS server response.</p>
     </div>
   </aside>
 
@@ -65,7 +76,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
   <script src="/consent.js"></script>
 </body>
 </html>

@@ -4,8 +4,8 @@
 const CFG = {
   defaultLat:      30.8327,   // Valdosta, GA
   defaultLon:     -83.2785,
-  radiusMiles:     100,
-  radiusMeters:    160934,
+  radiusMiles:     25,
+  radiusMeters:    40234,
   tideThresholdMi: 100,       // Show tides if NOAA station is within this many miles
   usgsIvUrl:      '/proxy/usgs/iv/',
   noaaStationsUrl: '/proxy/noaa/mdapi/prod/webapi/stations.json?type=tidepredictions&units=english',
@@ -381,7 +381,7 @@ function processData(data, userLat, userLon) {
   renderSidebarList(list);
 
   const n = list.length;
-  setStatus(`${n} active gauging station${n !== 1 ? 's' : ''} within 100 miles`);
+  setStatus(`${n} active gauging station${n !== 1 ? 's' : ''} within ${CFG.radiusMiles} miles`);
   document.getElementById('station-count').textContent = `${n} stations`;
 }
 
@@ -720,7 +720,7 @@ function renderSidebarList(stations) {
   const el = document.getElementById('station-list');
 
   if (!stations.length) {
-    el.innerHTML = '<p class="no-stations">No active stream gauges found within 100 miles of your location.</p>';
+    el.innerHTML = `<p class="no-stations">No active stream gauges found within ${CFG.radiusMiles} miles of your location.</p>`;
     return;
   }
 
@@ -786,4 +786,25 @@ function formatTime(dt) {
       hour: '2-digit', minute: '2-digit'
     });
   } catch { return ''; }
+}
+
+// ── Radius selector ──────────────────────────────────────────────────────────
+function onRadiusChange() {
+  const miles = parseInt(document.getElementById('radius-input').value, 10);
+  CFG.radiusMiles  = miles;
+  CFG.radiusMeters = Math.round(miles * 1609.34);
+  if (userLat !== null) {
+    if (radiusCircle) map.removeLayer(radiusCircle);
+    radiusCircle = L.circle([userLat, userLon], {
+      radius:      CFG.radiusMeters,
+      color:       '#4a9eff',
+      fillColor:   '#4a9eff',
+      fillOpacity: 0.04,
+      weight:      1.5,
+      dashArray:   '6, 5'
+    }).addTo(map);
+    map.fitBounds(radiusCircle.getBounds(), { padding: [30, 30] });
+    fetchUSGSData(userLat, userLon);
+    fetchNOAAStations(userLat, userLon);
+  }
 }

@@ -791,3 +791,32 @@ a:hover { text-decoration: underline; }
   .header-title-block p { display: none; }
   .zip-search { display: none; }
 }
+
+/* ── Radius selector ─────────────────────────────────────────────────────── */
+.radius-select {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.radius-select label { white-space: nowrap; }
+.radius-select select {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.radius-select select:focus { outline: none; border-color: var(--accent); }
+
+/* ── Loading note ────────────────────────────────────────────────────────── */
+.load-note {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  opacity: 0.75;
+}
