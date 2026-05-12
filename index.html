@@ -47,8 +47,24 @@
     </div>
     <div id="status-text" class="status-text">Locating you…</div>
     <div id="station-list" class="station-list"></div>
+
+    <!-- Boat Ramp Section -->
+    <div class="sidebar-section-header" onclick="toggleRampSection()">
+      <span>⚓ Boat Ramps &amp; Access</span>
+      <span id="ramp-count" class="ramp-count-badge"></span>
+      <span id="ramp-chevron" class="section-chevron">▼</span>
+    </div>
+    <div id="ramp-section" class="ramp-section">
+      <div class="ramp-controls">
+        <button id="ramp-toggle-btn" class="ramp-toggle-btn active" onclick="toggleBoatRamps()">⚓ Hide Ramps</button>
+      </div>
+      <div id="ramp-list" class="station-list">
+        <p class="no-stations" style="padding:8px 12px;font-size:12px;">Loading boat ramps…</p>
+      </div>
+    </div>
+
     <div class="sidebar-footer">
-      <span>Data: <a href="https://waterservices.usgs.gov" target="_blank" rel="noopener">USGS National Water Information System</a></span>
+      <span>Data: <a href="https://waterservices.usgs.gov" target="_blank" rel="noopener">USGS</a> · <a href="https://www.openstreetmap.org" target="_blank" rel="noopener">OpenStreetMap</a></span>
       <p class="load-note">&#9203; River data loading times vary depending on your selected radius and USGS server response.</p>
     </div>
   </aside>
@@ -73,10 +89,11 @@
     <div class="legend-item"><span class="legend-dot poor"></span> High Water</div>
     <div class="legend-item"><span class="legend-dot unknown"></span> No Data</div>
     <div class="legend-item"><span style="font-size:12px;line-height:1">🌊</span> Tide Station</div>
+    <div class="legend-item"><span style="font-size:12px;line-height:1">⚓</span> Boat Ramp</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=4"></script>
   <script src="/consent.js"></script>
 </body>
 </html>
