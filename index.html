@@ -9,6 +9,53 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<!-- rk-nav:start -->
+<style>
+.rk-nav{background:#1b5e20;padding:0 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:52px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;position:sticky;top:0;z-index:1000;box-sizing:border-box;}
+.rk-nav *{box-sizing:border-box;}
+.rk-nav .rk-logo{font-size:1.4rem;font-weight:900;color:#fff;text-decoration:none;letter-spacing:-0.5px;white-space:nowrap;}
+.rk-nav .rk-logo span{color:#a5d6a7;}
+.rk-nav ul{list-style:none;display:flex;align-items:center;gap:.25rem;flex-wrap:wrap;margin:0;padding:0;}
+.rk-nav ul li{margin:0;}
+.rk-nav ul li a{color:#c8e6c9;text-decoration:none;font-size:.9rem;padding:.4rem .6rem;border-radius:6px;white-space:nowrap;transition:background .15s;display:inline-block;}
+.rk-nav ul li a:hover{background:rgba(255,255,255,.12);color:#fff;}
+.rk-dd{position:relative;}
+.rk-dd-menu{display:none;position:absolute;top:100%;right:0;background:#fff;border:1px solid #e0e0e0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);min-width:210px;padding:.4rem 0;z-index:2000;}
+.rk-dd:hover .rk-dd-menu,.rk-dd:focus-within .rk-dd-menu{display:block;}
+.rk-dd-menu a{display:flex!important;align-items:center;gap:.5rem;padding:.55rem 1rem!important;color:#212121!important;font-size:.9rem;background:none!important;border-radius:0!important;}
+.rk-dd-menu a:hover{background:#f5f5f5!important;color:#212121!important;}
+.rk-suggest{color:#fff!important;font-weight:600!important;}
+.rk-home{background:#fff!important;color:#1b5e20!important;font-weight:700!important;padding:.4rem .85rem!important;border-radius:6px!important;}
+.rk-home:hover{background:#e8f5e9!important;color:#1b5e20!important;}
+@media (max-width:700px){.rk-nav ul{gap:.1rem;}.rk-nav ul li a{font-size:.78rem;padding:.3rem .45rem;}.rk-nav .rk-logo{font-size:1.15rem;}.rk-dd-menu{right:auto;left:0;}}
+</style>
+<nav class="rk-nav">
+  <a href="https://riktom.com" class="rk-logo">rik<span>tom</span>.com</a>
+  <ul>
+    <li><a href="https://riktom.com/about.html">About</a></li>
+    <li><a href="https://riktom.com/articles/">Blog</a></li>
+    <li class="rk-dd">
+      <a href="https://riktom.com/#apps">Apps &#9662;</a>
+      <div class="rk-dd-menu">
+        <a href="https://river.riktom.com"><span>&#127907;</span> RiverWatch</a>
+        <a href="https://fire.riktom.com"><span>&#128293;</span> Fire Watcher</a>
+        <a href="https://forecast.riktom.com"><span>&#127780;&#65039;</span> Hunt &amp; Fish Forecast</a>
+        <a href="https://hunt.riktom.com"><span>&#129420;</span> Hunting Tracker</a>
+        <a href="https://trucks.riktom.com"><span>&#128667;</span> Truck Finder</a>
+        <a href="https://burn.riktom.com"><span>&#128293;</span> Burn Permit</a>
+        <a href="https://ramps.riktom.com"><span>&#9875;</span> Ramp Radar</a>
+        <a href="https://tips.riktom.com"><span>&#9962;</span> Field Reports</a>
+        <a href="https://deer.riktom.com"><span>&#129420;</span> Deer Radar</a>
+        <a href="https://dash.riktom.com"><span>&#127919;</span> Trip Planner</a>
+        <a href="https://sky.riktom.com"><span>&#127756;</span> Night Sky</a>
+      </div>
+    </li>
+    <li><a href="https://riktom.com/suggest.html" class="rk-suggest">&#128161; Suggest an Idea</a></li>
+    <li><a href="https://riktom.com" class="rk-home">&#127968; Home</a></li>
+  </ul>
+</nav>
+<!-- rk-nav:end -->
+
 
   <!-- Header -->
   <header class="app-header">
