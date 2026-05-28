@@ -24,6 +24,9 @@ let noaaStations   = [];      // NOAA tide stations within range
 let noaaMarkers    = [];      // Leaflet markers for NOAA stations
 let tideCache      = {};      // noaaStationId -> tide predictions array
 let weatherCache   = {};      // "lat,lon" -> NWS forecast periods
+let boatRamps      = [];      // Boat ramp features from Overpass
+let boatRampMarkers = [];     // Leaflet markers for boat ramps
+let showBoatRamps  = true;    // Toggle visibility
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', initMap);
@@ -131,9 +134,10 @@ function onLocationFound(lat, lon) {
 
   map.fitBounds(radiusCircle.getBounds(), { padding: [30, 30] });
 
-  // Fetch USGS river data and NOAA tide stations in parallel
+  // Fetch USGS river data, NOAA tide stations, and boat ramps in parallel
   fetchUSGSData(lat, lon);
   fetchNOAAStations(lat, lon);
+  fetchBoatRamps(lat, lon);
 }
 
 // ── Bounding box helper ───────────────────────────────────────────────────────
@@ -788,6 +792,206 @@ function formatTime(dt) {
   } catch { return ''; }
 }
 
+// ── Boat Ramps (OpenStreetMap Overpass API) ───────────────────────────────────
+async function fetchBoatRamps(lat, lon) {
+  // Clear old markers
+  boatRampMarkers.forEach(m => map.removeLayer(m));
+  boatRampMarkers = [];
+  boatRamps = [];
+  renderBoatRampSidebar([]);
+
+  const bb = getBBox(lat, lon, CFG.radiusMiles);
+  const query = `
+    [out:json][timeout:15];
+    (
+      node["leisure"="slipway"](${bb.south},${bb.west},${bb.north},${bb.east});
+      node["amenity"="boat_ramp"](${bb.south},${bb.west},${bb.north},${bb.east});
+      way["leisure"="slipway"](${bb.south},${bb.west},${bb.north},${bb.east});
+      way["amenity"="boat_ramp"](${bb.south},${bb.west},${bb.north},${bb.east});
+    );
+    out center tags;
+  `;
+
+  try {
+    const res  = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      body: query
+    });
+    if (!res.ok) throw new Error('Overpass error ' + res.status);
+    const data = await res.json();
+
+    boatRamps = (data.elements || []).map(el => {
+      const rampLat = el.lat ?? el.center?.lat;
+      const rampLon = el.lon ?? el.center?.lon;
+      if (!rampLat || !rampLon) return null;
+      const tags = el.tags || {};
+      const name = tags.name || tags['name:en'] || 'Unnamed Boat Ramp';
+      const dist = haversine(lat, lon, rampLat, rampLon);
+      return { name, lat: rampLat, lon: rampLon, dist, tags };
+    }).filter(Boolean).sort((a, b) => a.dist - b.dist);
+
+    if (showBoatRamps) addBoatRampMarkers();
+    renderBoatRampSidebar(boatRamps);
+  } catch (err) {
+    console.warn('Boat ramp fetch error:', err);
+    renderBoatRampSidebar([]);
+  }
+}
+
+function assessRampAccess(rampLat, rampLon) {
+  // Find nearest USGS station within 15 miles
+  let nearest = null, minDist = Infinity;
+  Object.values(stationsData).forEach(s => {
+    const d = haversine(rampLat, rampLon, s.lat, s.lon);
+    if (d < minDist) { minDist = d; nearest = s; }
+  });
+
+  if (!nearest || minDist > 15) {
+    return { color: '#6b7280', icon: 'ℹ️', label: 'No gauge nearby', tip: 'Verify conditions before launching' };
+  }
+
+  const cfs  = nearest.parameters['00060']?.value;
+  const gage = nearest.parameters['00065']?.value;
+
+  if (cfs === null || cfs === undefined) {
+    return { color: '#6b7280', icon: 'ℹ️', label: 'No flow data', tip: `Nearest gauge: ${nearest.siteName.split(' AT ')[0]}` };
+  }
+
+  const gageNote = gage !== null && gage !== undefined ? ` · ${gage} ft gage` : '';
+  if (cfs > 3000) {
+    return { color: '#ef4444', icon: '🚫', label: 'Likely Flooded', tip: `${Number(cfs).toLocaleString()} CFS${gageNote} — ramp may be under water` };
+  }
+  if (cfs > 1000) {
+    return { color: '#f59e0b', icon: '⚠️', label: 'Use Caution', tip: `${Number(cfs).toLocaleString()} CFS${gageNote} — swift current, use caution` };
+  }
+  return { color: '#22c55e', icon: '✅', label: 'Good Access', tip: `${Number(cfs).toLocaleString()} CFS${gageNote} — conditions look good` };
+}
+
+function addBoatRampMarkers() {
+  boatRampMarkers.forEach(m => map.removeLayer(m));
+  boatRampMarkers = [];
+
+  boatRamps.forEach(ramp => {
+    const access = assessRampAccess(ramp.lat, ramp.lon);
+    const el = document.createElement('div');
+    el.className = 'boat-ramp-marker';
+    el.innerHTML = '⚓';
+    el.style.cssText = `
+      font-size:18px; line-height:1; cursor:pointer;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+      filter: drop-shadow(0 0 3px ${access.color});
+    `;
+
+    const marker = L.marker([ramp.lat, ramp.lon], {
+      icon: L.divIcon({
+        className: '',
+        html: el.outerHTML,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
+      }),
+      zIndexOffset: 600
+    }).addTo(map);
+
+    marker.bindTooltip(
+      `<strong>⚓ ${ramp.name}</strong><br>${access.icon} ${access.label}<br><small>${ramp.dist.toFixed(1)} mi away</small>`,
+      { sticky: true, direction: 'top', offset: [0, -10] }
+    );
+
+    marker.on('click', () => showRampDetail(ramp));
+    boatRampMarkers.push(marker);
+  });
+}
+
+function showRampDetail(ramp) {
+  const access = assessRampAccess(ramp.lat, ramp.lon);
+  const tags   = ramp.tags || {};
+  const surface   = tags.surface   ? `<div class="ramp-tag">🛣️ Surface: ${tags.surface}</div>` : '';
+  const fee       = tags.fee       ? `<div class="ramp-tag">💰 Fee: ${tags.fee}</div>` : '';
+  const access_tag = tags.access   ? `<div class="ramp-tag">🔒 Access: ${tags.access}</div>` : '';
+  const operator  = tags.operator  ? `<div class="ramp-tag">🏛️ Operator: ${tags.operator}</div>` : '';
+  const mapsUrl   = `https://www.google.com/maps/dir/?api=1&destination=${ramp.lat},${ramp.lon}`;
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-station-name">⚓ ${ramp.name}</div>
+    <div class="detail-meta">
+      <span>📍 ${ramp.dist.toFixed(1)} miles away</span>
+    </div>
+
+    <div class="conditions-badge" style="background:${access.color}22; border-color:${access.color}; color:${access.color}">
+      ${access.icon} ${access.label}
+    </div>
+    <p style="margin:8px 0 12px; font-size:13px; color:var(--text-secondary, #9ca3af);">${access.tip}</p>
+
+    <div class="ramp-tags">
+      ${surface}${fee}${access_tag}${operator}
+    </div>
+
+    <div class="detail-actions" style="margin-top:12px">
+      <a href="${mapsUrl}" target="_blank" rel="noopener" class="btn-usgs">
+        🗺️ Get Directions ↗
+      </a>
+    </div>
+  `;
+
+  document.getElementById('detail-panel').classList.add('open');
+}
+
+function renderBoatRampSidebar(ramps) {
+  const el = document.getElementById('ramp-list');
+  if (!el) return;
+
+  const count = document.getElementById('ramp-count');
+  if (count) count.textContent = ramps.length ? `${ramps.length} found` : '';
+
+  if (!ramps.length) {
+    el.innerHTML = `<p class="no-stations" style="padding:8px 12px;font-size:12px;">No boat ramps found within ${CFG.radiusMiles} miles.</p>`;
+    return;
+  }
+
+  el.innerHTML = ramps.map(ramp => {
+    const access = assessRampAccess(ramp.lat, ramp.lon);
+    return `
+      <div class="station-item" onclick="focusRamp(${ramp.lat}, ${ramp.lon})">
+        <div class="station-dot" style="background:${access.color}">⚓</div>
+        <div class="station-info">
+          <div class="station-name">${ramp.name}</div>
+          <div class="station-readings">
+            <span class="station-dist">${ramp.dist.toFixed(1)} mi</span>
+            &nbsp;·&nbsp; ${access.icon} ${access.label}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function focusRamp(lat, lon) {
+  const ramp = boatRamps.find(r => r.lat === lat && r.lon === lon);
+  if (!ramp) return;
+  map.setView([lat, lon], 14, { animate: true });
+  showRampDetail(ramp);
+  if (window.innerWidth < 768) closeSidebar();
+}
+
+function toggleRampSection() {
+  const section  = document.getElementById('ramp-section');
+  const chevron  = document.getElementById('ramp-chevron');
+  const isHidden = section.classList.toggle('collapsed');
+  if (chevron) chevron.textContent = isHidden ? '▶' : '▼';
+}
+
+function toggleBoatRamps() {
+  showBoatRamps = !showBoatRamps;
+  const btn = document.getElementById('ramp-toggle-btn');
+  if (showBoatRamps) {
+    addBoatRampMarkers();
+    if (btn) { btn.textContent = '⚓ Hide Ramps'; btn.classList.add('active'); }
+  } else {
+    boatRampMarkers.forEach(m => map.removeLayer(m));
+    boatRampMarkers = [];
+    if (btn) { btn.textContent = '⚓ Show Ramps'; btn.classList.remove('active'); }
+  }
+}
+
 // ── Radius selector ──────────────────────────────────────────────────────────
 function onRadiusChange() {
   const miles = parseInt(document.getElementById('radius-input').value, 10);
@@ -806,5 +1010,6 @@ function onRadiusChange() {
     map.fitBounds(radiusCircle.getBounds(), { padding: [30, 30] });
     fetchUSGSData(userLat, userLon);
     fetchNOAAStations(userLat, userLon);
+    fetchBoatRamps(userLat, userLon);
   }
 }
